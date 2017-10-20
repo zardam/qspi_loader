@@ -1,0 +1,6 @@
+[submodule "libopencm3"]
+	path = libopencm3
+	url = ../libopencm3-examples/libopencm3
+[submodule "flashrom"]
+	path = flashrom
+	url = https://review.coreboot.org/flashrom.git
