@@ -21,7 +21,7 @@
 /* Define memory regions. */
 MEMORY
 {
-	rom (rx)  : ORIGIN = 0x20008000, LENGTH = 96K // Do not overwrite the bootloader !
+	rom (rx)  : ORIGIN = 0x20008000, LENGTH = 96K /* Do not overwrite the bootloader ! */
 	ram (rwx) : ORIGIN = 0x20020000, LENGTH = 128K
 }
 
