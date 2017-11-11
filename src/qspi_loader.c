@@ -33,19 +33,6 @@ static void cdcacm_to_spi(int len) {
   }
 }
 
-static void spi_to_cdcacm(int len) {
-  if(len > 0) {
-    while(QUADSPI_SR & QUADSPI_SR_BUSY);
-    QUADSPI_DLR = len - 1;
-    while(QUADSPI_SR & QUADSPI_SR_BUSY);
-    QUADSPI_CCR |= (1 & QUADSPI_CCR_FMODE_MASK) << QUADSPI_CCR_FMODE_SHIFT;
-    for(int i=0;i<len;i++) {
-      cdcacm_put_char(QUADSPI_BYTE_DR);
-    }
-    while(QUADSPI_SR & QUADSPI_SR_BUSY);
-  }
-}
-
 static void spi_to_cdcacm_fast(int len) {
   if(len > 0) {
     while(QUADSPI_SR & QUADSPI_SR_BUSY);
@@ -80,12 +67,13 @@ static void setup_qspi(void) {
   gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO6); // Need to control #CS manually
   gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO8); // #WR needs to be up
   gpio_mode_setup(GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9);
-  gpio_mode_setup(GPIOD, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO12 | GPIO13);
+  gpio_mode_setup(GPIOD, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO12);
+  gpio_mode_setup(GPIOD, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO13); // #HOLD needs to be up
   gpio_set_af(GPIOB, GPIO_AF9, GPIO2);
   gpio_set(GPIOB, GPIO6);
   gpio_set_af(GPIOC, GPIO_AF10, GPIO8);
   gpio_set_af(GPIOC, GPIO_AF9, GPIO9);
-  gpio_set_af(GPIOD, GPIO_AF9, GPIO12 | GPIO13);
+  gpio_set_af(GPIOD, GPIO_AF9, GPIO12);
 
   // QSPI Configuration
   while(QUADSPI_SR & QUADSPI_SR_BUSY);
@@ -96,7 +84,7 @@ static void setup_qspi(void) {
   QUADSPI_CR |= ((14 & QUADSPI_CR_PRESCALE_MASK) << QUADSPI_CR_PRESCALE_SHIFT) | QUADSPI_CR_EN;
 }
 
-void process_command(uint8_t command) {
+static void process_command(uint8_t command) {
   uint32_t slen, rlen, freq, prescaler;
   switch(command) {
     case S_CMD_NOP:
@@ -122,7 +110,7 @@ void process_command(uint8_t command) {
 
     case S_CMD_Q_PGMNAME:
       cdcacm_put_char(S_ACK);
-      cdcacm_put_buf("zardam's serprog", 16);
+      cdcacm_put_buf((uint8_t *) "zardam's serprog", 16);
       break;
 
     case S_CMD_Q_SERBUF:
@@ -178,6 +166,10 @@ void process_command(uint8_t command) {
       cdcacm_put_char((freq >> 8) & 0xff);
       cdcacm_put_char((freq >> 16) & 0xff);
       cdcacm_put_char((freq >> 24) & 0xff);
+      break;
+    
+    case 'q':
+      scb_reset_system();
       break;
 
     default:
