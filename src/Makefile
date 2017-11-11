@@ -25,3 +25,6 @@ OPENCM3_DIR = ../libopencm3
 LDSCRIPT = stm32f4-ram.ld
 
 include ../libopencm3.target.mk
+
+run: $(BINARY).bin
+	dfu-util -i 0 -a 0 -s 0x20008000:force:leave -D $<
