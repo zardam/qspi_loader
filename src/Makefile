@@ -26,5 +26,11 @@ LDSCRIPT = stm32f4-ram.ld
 
 include ../libopencm3.target.mk
 
-run: $(BINARY).bin
+.PHONY: run_qspi_loader run_firmware
+run_qspi_loader: $(BINARY).bin
 	dfu-util -i 0 -a 0 -s 0x20008000:force:leave -D $<
+
+run_firmware:
+	$(eval TMPFILE := $(shell mktemp -u))
+	dfu-util -i 0 -a 0 -s 0x08000000:leave -U $(TMPFILE)
+	rm $(TMPFILE)
