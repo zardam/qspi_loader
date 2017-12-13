@@ -26,12 +26,17 @@ LDSCRIPT = stm32f4.ld
 
 include ../libopencm3.target.mk
 
-.PHONY: flash run_firmware
-flash: $(BINARY).bin
-	dfu-util -i 0 -a 0 -s 0x20000000 -D $<
-	dfu-util -i 0 -a 0 -s 0x20008000 -D $<
+.PHONY: flash run_firmware run_multiboot
+flash_multiboot: $(BINARY).bin
+	dfu-util -i 0 -a 0 -s 0x08000000 -D $<
+	dfu-util -i 0 -a 0 -s 0x080E0000 -D $<
 
 run_firmware:
 	$(eval TMPFILE := $(shell mktemp -u))
 	dfu-util -i 0 -a 0 -s 0x08000000:leave -U $(TMPFILE)
+	rm $(TMPFILE)
+
+run_multiboot:
+	$(eval TMPFILE := $(shell mktemp -u))
+	dfu-util -i 0 -a 0 -s 0x080E0000:leave -U $(TMPFILE)
 	rm $(TMPFILE)
